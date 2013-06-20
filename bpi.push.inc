@@ -360,6 +360,7 @@ function bpi_convert_to_bpi($node, $category, $audience, $with_images = FALSE, $
     $bpi_content['firstname'] = $user->name;
     $bpi_content['lastname'] = '';
     $bpi_content['title'] = $node->title;
+    $agency_id = variable_get('bpi_agency_id', '');
 
     $teaser_map = variable_get('bpi_field_teaser', '');
     $body_map = variable_get('bpi_field_body', '');
@@ -380,7 +381,13 @@ function bpi_convert_to_bpi($node, $category, $audience, $with_images = FALSE, $
     if (!empty($body_field) && isset($body_field['#items'][0]['safe_value'])) {
       $body = $body_field['#items'][0]['safe_value'];
     }
-
+    // Ensure that username and agency do not replicate.
+    if ((strpos($body, 'class="username"')) === FALSE && !empty($user->name)) {
+      $body .= '<p><span class="username">Pushed by:' . $user->name . '</span></p>';
+    }
+    if ((strpos($body, 'class="agency"') === FALSE) && !empty($agency_id)) {
+      $body .= '<p><span class="agency">Agency id:' . $agency_id . '</span></p>';
+    }
     // Empty the teaser, if body and teaser are mapped to same fields, and the values
     // are identical.
     if ($teaser_map == $body_map && md5($teaser) == md5($body)) {
