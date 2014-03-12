@@ -376,7 +376,6 @@ function bpi_convert_to_bpi($node, $category, $audience, $with_images = FALSE, $
   $teaser_map = variable_get('bpi_field_teaser', '');
   $body_map = variable_get('bpi_field_body', '');
   $materials_map = variable_get('bpi_field_materials', '');
-  $materials_map = field_view_field('node', $node, $materials_map);
   $teaser_field = field_view_field('node', $node, $teaser_map);
   $body_field = field_view_field('node', $node, $body_map);
   $teaser = '';
@@ -392,14 +391,17 @@ function bpi_convert_to_bpi($node, $category, $audience, $with_images = FALSE, $
   }
 
   $materials_drupal = array();
-  foreach ($materials_map as $key => $value) {
-    if (is_numeric($key)) {
-      $record = $value['#object']->getRecord();
-      $ac_identifier_array = array_shift(
-        array_values($record['ac:identifier'])
-      );
-      $parts = explode('|', $ac_identifier_array[0]);
-      $materials_drupal[] = $parts[1] . ':' . $parts[0];
+  if (!empty($materials_map)) {
+    $materials_map = field_view_field('node', $node, $materials_map);
+    foreach ($materials_map as $key => $value) {
+      if (is_numeric($key)) {
+        $record = $value['#object']->getRecord();
+        $ac_identifier_array = array_shift(
+          array_values($record['ac:identifier'])
+        );
+        $parts = explode('|', $ac_identifier_array[0]);
+        $materials_drupal[] = $parts[1] . ':' . $parts[0];
+      }
     }
   }
 
