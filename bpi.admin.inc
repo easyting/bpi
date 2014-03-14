@@ -196,11 +196,12 @@ function bpi_admin_content_mapping_form($form, $form_state) {
     '#default_value' => variable_get('bpi_field_body', ''),
   );
 
+  $materials_options = array('' => t('None')) + $field_instances;
   $form['bpi_mapper']['bpi_field_materials'] = array(
     '#type' => 'select',
     '#title' => t('BPI materials'),
     '#description' => '',
-    '#options' => $field_instances,
+    '#options' => $materials_options,
     '#default_value' => variable_get('bpi_field_materials', ''),
   );
 
