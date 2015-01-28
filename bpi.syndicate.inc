@@ -241,6 +241,7 @@ function bpi_search_get_items() {
       'total_count' => isset($response->total) ? $response->total : 0,
       'assets' => (count($assets) > 0) ? $assets : array(),
       'editable' => !empty($current_item['editable']),
+      'type' => $current_item['type'],
     );
   }
 
@@ -271,6 +272,7 @@ function bpi_preprocess_bpi_search_results(&$variables) {
       'class' => 'bpi-title',
     ),
     t('Date'),
+    t('Type'),
     array(
       'data' => t('Details'),
       'class' => 'bpi-details',
@@ -299,6 +301,7 @@ function bpi_preprocess_bpi_search_results(&$variables) {
     );
 
     $rows[$i]['date'] = date_format(new DateTime($item['date']), 'Y-m-d H:i:s');
+    $rows[$i]['type'] = $item['type'];
 
     // Add details.
     $rows[$i]['details'] = '';
@@ -338,7 +341,7 @@ function bpi_preprocess_bpi_search_results(&$variables) {
       ),
       l(
         t('Syndicate'),
-        'admin/bpi/syndicate/' . $item['bpi_id']
+        'admin/bpi/syndicate/' . $item['type'] . '/' . $item['bpi_id']
       ),
     );
     $rows[$i]['actions'] = implode(' ', $actions);
@@ -553,11 +556,21 @@ function bpi_get_next_sorting() {
  * @param int $bpi_id
  *   Content ID, as as stored in BPI service.
  */
-function bpi_syndicate_action($bpi_id) {
-  $bpi_ctype = variable_get('bpi_content_type', '');
+function bpi_syndicate_action($type, $bpi_id) {
+  $bpi_ctype = '';
+  $mappings = variable_get('bpi_mapping', array());
+
+  foreach ($mappings as $mapping) {
+    if ($type == $mapping['bpi_content_type']) {
+      $bpi_ctype = $mapping['bpi_content_type'];
+    }
+    elseif ($mapping['bpi_content_type'] == 'ding_news' && $type == 'article') {
+      $bpi_ctype = $mapping['bpi_content_type'];
+    }
+  }
 
   if (!empty($bpi_ctype)) {
-    drupal_goto(str_replace('_', '-', 'node/add/' . $bpi_ctype), array('query' => array('bpi_id' => $bpi_id)));
+    drupal_goto(str_replace('_', '-', 'node/add/' . $bpi_ctype), array('query' => array('bpi_id' => $bpi_id, 'bpi_ctype' => $bpi_ctype)));
   }
   else {
     drupal_goto('admin/bpi');

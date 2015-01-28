@@ -137,77 +137,145 @@ function bpi_admin_settings_form_validate(&$form, &$form_state) {
  *
  * @ingroup forms
  */
-function bpi_admin_content_mapping_form($form, $form_state) {
+function bpi_admin_content_mapping_form($form, &$form_state) {
   $node_types = node_type_get_names();
   $node_types_names = array_keys($node_types);
+  $mappings = variable_get('bpi_mapping', array());
 
-  $form['bpi_content_type'] = array(
-    '#type' => 'select',
-    '#title' => t('Content type'),
-    '#description' => t('Select a content type into which content from BPI will be syndicated.'),
-    '#options' => $node_types,
-    '#default_value' => variable_get('bpi_content_type', reset($node_types_names)),
-    '#ajax' => array(
-      'callback' => '_bpi_content_mapper_ctype_fields',
-      'wrapper' => 'bpi-field-mapper-wrapper',
-      'effect' => 'fade',
-      'method' => 'replace',
-    ),
-  );
+  $form['#tree'] = TRUE;
 
-  $selected_node_type = $form['bpi_content_type']['#default_value'];
-
-  if (isset($form_state['values']['bpi_content_type'])) {
-    $selected_node_type = $form_state['values']['bpi_content_type'];
+  if (empty($mappings)) {
+    $form_state['num_bpi_mapping'] = 1;
+  }
+  elseif(!isset($form_state['num_bpi_mapping'])) {
+    $form_state['num_bpi_mapping'] = count($mappings);
   }
 
-  $field_instances = bpi_get_field_instances($selected_node_type);
+  for ($i = 1; $i <= $form_state['num_bpi_mapping']; $i++) {
+    $default_ct = (!empty($mappings[$i]['bpi_content_type'])) ? $mappings[$i]['bpi_content_type'] : reset($node_types_names);
+    $form['bpi_mapping'][$i] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Mapping #@num', array('@num' => $i)),
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+    );
 
-  $form['bpi_mapper'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Field mapping'),
-    '#description' => t('Define you custom mapping rules. Each dropdown maps BPI related fields to your content fields.'),
-    '#prefix' => '<div id="bpi-field-mapper-wrapper">',
-    '#suffix' => '</div>',
-  );
+    $form['bpi_mapping'][$i]['bpi_content_type'] = array(
+      '#type' => 'select',
+      '#title' => t('Content type'),
+      '#description' => t('Select a content type into which content from BPI will be syndicated.'),
+      '#options' => $node_types,
+      '#default_value' => $default_ct,
+      '#ajax' => array(
+        'callback' => '_bpi_content_mapper_ctype_fields',
+        'wrapper' => 'bpi-field-mapper-wrapper-' . $i,
+        'effect' => 'fade',
+        'method' => 'replace',
+      ),
+    );
 
-  $form['bpi_mapper']['bpi_field_title'] = array(
-    '#type' => 'select',
-    '#title' => t('BPI title'),
-    '#description' => t('Titles are automatically assigned.'),
-    '#options' => array('title' => t('Title')),
-    '#default_value' => variable_get('bpi_field_title', 'title'),
-    '#disabled' => TRUE,
-  );
+    $selected_node_type = $form['bpi_mapping'][$i]['bpi_content_type']['#default_value'];
 
-  $form['bpi_mapper']['bpi_field_teaser'] = array(
-    '#type' => 'select',
-    '#title' => t('BPI teaser'),
-    '#description' => t('Assign to body field, if it has summary enabled.'),
-    '#options' => $field_instances,
-    '#default_value' => variable_get('bpi_field_teaser', ''),
-  );
+    if (isset($form_state['values']['bpi_mapping'][$i]['bpi_content_type'])) {
+      $selected_node_type = $form_state['values']['bpi_mapping'][$i]['bpi_content_type'];
+    }
 
-  $form['bpi_mapper']['bpi_field_body'] = array(
-    '#type' => 'select',
-    '#title' => t('BPI body'),
-    '#description' => '',
-    '#options' => $field_instances,
-    '#default_value' => variable_get('bpi_field_body', ''),
-  );
+    $field_instances = bpi_get_field_instances($selected_node_type);
 
-  $materials_options = array('' => t('None')) + $field_instances;
-  $form['bpi_mapper']['bpi_field_materials'] = array(
-    '#type' => 'select',
-    '#title' => t('BPI materials'),
-    '#description' => '',
-    '#options' => $materials_options,
-    '#default_value' => variable_get('bpi_field_materials', ''),
-  );
+    $form['bpi_mapping'][$i]['bpi_mapper'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Field mapping'),
+      '#description' => t('Define you custom mapping rules. Each dropdown maps BPI related fields to your content fields.'),
+      '#prefix' => '<div id="bpi-field-mapper-wrapper-' . $i . '">',
+      '#suffix' => '</div>',
+    );
+
+    $form['bpi_mapping'][$i]['bpi_mapper']['bpi_field_title'] = array(
+      '#type' => 'select',
+      '#title' => t('BPI title'),
+      '#description' => t('Titles are automatically assigned.'),
+      '#options' => array('title' => t('Title')),
+      '#default_value' => variable_get('bpi_field_title', 'title'),
+      '#disabled' => TRUE,
+    );
+
+    $form['bpi_mapping'][$i]['bpi_mapper']['bpi_field_teaser'] = array(
+      '#type' => 'select',
+      '#title' => t('BPI teaser'),
+      '#description' => t('Assign to body field, if it has summary enabled.'),
+      '#options' => $field_instances,
+      '#default_value' => variable_get('bpi_field_teaser', ''),
+    );
+
+    $form['bpi_mapping'][$i]['bpi_mapper']['bpi_field_body'] = array(
+      '#type' => 'select',
+      '#title' => t('BPI body'),
+      '#description' => '',
+      '#options' => $field_instances,
+      '#default_value' => variable_get('bpi_field_body', ''),
+    );
+
+    $materials_options = array('' => t('None')) + $field_instances;
+    $form['bpi_mapping'][$i]['bpi_mapper']['bpi_field_materials'] = array(
+      '#type' => 'select',
+      '#title' => t('BPI materials'),
+      '#description' => '',
+      '#options' => $materials_options,
+      '#default_value' => variable_get('bpi_field_materials', ''),
+    );
+  }
 
   $form['#attached']['css'][] = drupal_get_path('module', 'bpi') . '/css/bpi-admin.styles.css';
 
-  return system_settings_form($form);
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Submit',
+  );
+
+  // Adds "Add another mapping" button.
+  $form['add_mapping'] = array(
+    '#type' => 'submit',
+    '#value' => t('Add another mapping'),
+    '#submit' => array('bpi_admin_add_mapping'),
+  );
+
+  if ($form_state['num_bpi_mapping'] > 1) {
+    $form['remove_mapping'] = array(
+      '#type' => 'submit',
+      '#value' => t('Remove latest mapping'),
+      '#submit' => array('bpi_admin_remove_maping'),
+      '#limit_validation_errors' => array(),
+    );
+  }
+
+  return $form;
+}
+
+/**
+ * Submit handler for "Add another mapping" button on bpi_admin_content_mapping_form().
+ */
+function bpi_admin_add_mapping($form, &$form_state) {
+  $form_state['num_bpi_mapping']++;
+  $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * Submit handler for "Remove mapping" button on bpi_admin_content_mapping_form().
+ */
+function bpi_admin_remove_maping($form, &$form_state) {
+  if ($form_state['num_bpi_mapping'] > 1) {
+    $form_state['num_bpi_mapping']--;
+  }
+
+  $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * Submit function for bpi_admin_content_mapping_form().
+ */
+function bpi_admin_content_mapping_form_submit($form, $form_state) {
+  $mappings = $form_state['values']['bpi_mapping'];
+  variable_set('bpi_mapping', $mappings);
 }
 
 /**
@@ -225,7 +293,8 @@ function bpi_admin_content_mapping_form($form, $form_state) {
  * @ingroup forms
  */
 function _bpi_content_mapper_ctype_fields(&$form, &$form_state) {
-  return $form['bpi_mapper'];
+  $form_number = $form_state['triggering_element']['#parents'][1];
+  return $form['bpi_mapping'][$form_number]['bpi_mapper'];
 }
 
 /**

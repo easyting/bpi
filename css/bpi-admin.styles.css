@@ -2,7 +2,7 @@
 #bpi-admin-settings-form .form-item-bpi-api-key label,
 #bpi-admin-settings-form .form-item-bpi-secret-key label,
 #bpi-admin-settings-form .form-item-bpi-service-url label,
-#bpi-field-mapper-wrapper label{
+[id^=bpi-field-mapper-wrapper] label{
   display: inline-block;
   width: 175px;
 }
