@@ -69,9 +69,9 @@ function bpi_menu() {
     'file' => 'bpi.preview.inc',
   );
 
-  $menu['admin/bpi/syndicate/%'] = array(
+  $menu['admin/bpi/syndicate/%/%'] = array(
     'page callback' => 'bpi_syndicate_action',
-    'page arguments' => array(3),
+    'page arguments' => array(3, 4),
     'access arguments' => array('bpi syndicate content'),
     'file' => 'bpi.syndicate.inc',
   );
@@ -222,7 +222,7 @@ function bpi_theme($existing, $type, $theme, $path) {
  * according to mapped settings.
  */
 function bpi_form_node_form_alter(&$form, &$form_state, $form_id) {
-  $bpi_ctype = variable_get('bpi_content_type', '');
+  $bpi_ctype = (isset($_GET['bpi_ctype'])) ? $_GET['bpi_ctype'] : NULL;
 
   if (empty($bpi_ctype)) {
     return;
@@ -260,10 +260,21 @@ function bpi_form_node_form_alter(&$form, &$form_state, $form_id) {
       return;
     }
 
+    $mappings = variable_get('bpi_mapping', array());
+
+    $teaser = '';
+    $body = '';
+    $materials_field = '';
+
+    foreach ($mappings as $mapping) {
+      if ($mapping['bpi_content_type'] == $bpi_ctype) {
+        $teaser = $mapping['bpi_mapper']['bpi_field_teaser'];
+        $body = $mapping['bpi_mapper']['bpi_field_body'];
+        $materials_field = $mapping['bpi_mapper']['bpi_field_materials'];
+      }
+    }
+
     $form['title']['#default_value'] = isset($bpi_content['title']) ? $bpi_content['title'] : '';
-    $teaser = variable_get('bpi_field_teaser', '');
-    $body = variable_get('bpi_field_body', '');
-    $materials_field = variable_get('bpi_field_materials', '');
     $current_language = $form['language']['#value'];
 
     if (module_exists('ting_reference') && isset($bpi_content['material'])) {
