@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Review CT feature.
+ */
+
+include_once 'review_ct.features.inc';
