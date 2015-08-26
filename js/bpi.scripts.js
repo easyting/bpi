@@ -35,4 +35,23 @@
     Drupal.ajax['bpi_syndicate_images'].bpi_syndicate_images();
   });
 
+  Drupal.behaviors.bpi = {
+   attach: function (context, settings) {
+     jQuery('input#edit-bpi-assets-syndicate:not(.ajax-processed)').addClass('ajax-processed').each(function() {
+        var element_settings = {};
+        element_settings.progress = { 'type' : 'none' };
+        element_settings.url = '/system/ajax'
+        element_settings.event = 'mousedown';
+        element_settings.prevent = 'click';
+        element_settings.callback = 'bpi_asset_action_ajax_callback';
+        element_settings.submit = {
+          _triggering_element_name: "op",
+          _triggering_element_value: "Отправить"
+        };
+        element_settings.effect = 'fade';
+        var base = jQuery(this).attr('id');
+        Drupal.ajax[base] = new Drupal.ajax(base, this, element_settings);
+      });
+    }
+  };
 })(jQuery);

@@ -564,7 +564,7 @@ function bpi_syndicate_action($type, $bpi_id) {
     if ($type == $mapping['bpi_content_type']) {
       $bpi_ctype = $mapping['bpi_content_type'];
     }
-    elseif ($mapping['bpi_content_type'] == 'ding_news' && $type == 'article') {
+    elseif ($mapping['bpi_content_type'] == 'ding_news' && in_array($type, array('article', 'review'))) {
       $bpi_ctype = $mapping['bpi_content_type'];
     }
   }
